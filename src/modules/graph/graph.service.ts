@@ -25,4 +25,8 @@ export class GraphService {
       .sort({ resultTime: 1 })
       .exec();
   }
+
+  async clearGraphs(): Promise<void> {
+    await this.graphModel.deleteMany({}); // Clear all documents in the Graph collection
+  }
 }

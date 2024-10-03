@@ -5,9 +5,11 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  Delete, // Import Delete decorator
 } from '@nestjs/common';
 import { GraphService } from './graph.service';
 import { Graph } from './graph.interface';
+
 @Controller('api/v1/graphs')
 export class GraphController {
   constructor(private readonly graphService: GraphService) {}
@@ -73,5 +75,18 @@ export class GraphController {
     const graphs = await this.graphService.getGraphsByDateRange(start, end);
     const formattedData = this.formatGraphData(graphs);
     return this.createSuccessResponse(formattedData);
+  }
+
+  // Endpoint to clear all graphs
+  @Delete() // Define the HTTP method
+  async clearCollection(): Promise<{
+    status: string;
+    message: string;
+  }> {
+    await this.graphService.clearGraphs(); // Call the service method to clear the collection
+    return {
+      status: 'success',
+      message: 'All graph records have been cleared.',
+    };
   }
 }
