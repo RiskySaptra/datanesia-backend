@@ -7,3 +7,7 @@ export interface Graph extends Document {
   cellId: string;
   availDur: number;
 }
+
+export interface GraphFilter {
+  [cellId: string]: string[]; // cellId as key and array of enodebIds as value
+}

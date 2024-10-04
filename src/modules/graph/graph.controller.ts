@@ -1,25 +1,17 @@
 import {
   Controller,
   Get,
-  Param,
   Query,
   HttpException,
   HttpStatus,
-  Delete, // Import Delete decorator
+  Delete,
 } from '@nestjs/common';
 import { GraphService } from './graph.service';
-import { Graph } from './graph.interface';
+import { Graph, GraphFilter } from './graph.interface';
 
 @Controller('api/v1/graphs')
 export class GraphController {
   constructor(private readonly graphService: GraphService) {}
-
-  private formatGraphData(graphs: Graph[]): Array<{ x: number; y: number }> {
-    return graphs.map((graph) => ({
-      x: new Date(graph.resultTime).getTime(),
-      y: graph.availDur,
-    }));
-  }
 
   private validateAndParseDateRange(
     startDate: string,
@@ -42,10 +34,9 @@ export class GraphController {
     return [start, end];
   }
 
-  private createSuccessResponse(data: any[], status: string = 'success') {
+  private createSuccessResponse<T>(data: T[], status: string = 'success') {
     return {
       status,
-      total: data.length,
       data,
     };
   }
@@ -54,11 +45,20 @@ export class GraphController {
   @Get()
   async getAllGraphs(): Promise<{
     status: string;
-    total: number;
     data: Graph[];
   }> {
     const graphs = await this.graphService.getAllGraphs();
     return this.createSuccessResponse(graphs);
+  }
+
+  // Endpoint to get filtered graphs
+  @Get('filter')
+  async getAllGraphFilter(): Promise<{
+    status: string;
+    data: GraphFilter[];
+  }> {
+    const graphs = await this.graphService.getAllGraphFilter();
+    return this.createSuccessResponse([graphs]);
   }
 
   // Endpoint to get graphs by date range
@@ -66,24 +66,30 @@ export class GraphController {
   async getGraphsByDateRange(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
+    @Query('cellId') cellId?: string, // Optional query parameter
+    @Query('enodebId') enodebId?: string, // Optional query parameter
   ): Promise<{
     status: string;
-    total: number;
-    data: Array<{ x: Date; y: number }>;
+    data: any;
   }> {
     const [start, end] = this.validateAndParseDateRange(startDate, endDate);
-    const graphs = await this.graphService.getGraphsByDateRange(start, end);
-    const formattedData = this.formatGraphData(graphs);
-    return this.createSuccessResponse(formattedData);
+    const graphs = await this.graphService.getGraphsByDateRange(
+      start,
+      end,
+      cellId,
+      enodebId,
+    );
+
+    return this.createSuccessResponse(graphs);
   }
 
   // Endpoint to clear all graphs
-  @Delete() // Define the HTTP method
+  @Delete() // Clear all graphs at the base endpoint
   async clearCollection(): Promise<{
     status: string;
     message: string;
   }> {
-    await this.graphService.clearGraphs(); // Call the service method to clear the collection
+    await this.graphService.clearGraphs();
     return {
       status: 'success',
       message: 'All graph records have been cleared.',
