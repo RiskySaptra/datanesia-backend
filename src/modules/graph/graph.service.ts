@@ -8,6 +8,12 @@ export class GraphService {
     @Inject('GRAPH_MODEL') private readonly graphModel: Model<Graph>,
   ) {}
 
+  private calculateAvailability(availDur: number): number {
+    const totalTime = 900; // Total time period (900 seconds = 15 minutes)
+    const availability = (availDur / totalTime) * 100;
+    return Math.round(availability); // Round to nearest whole number
+  }
+
   // Method to retrieve all graphs
   async getAllGraphs(): Promise<Graph[]> {
     return this.graphModel.find().exec(); // Retrieve all documents
@@ -77,7 +83,7 @@ export class GraphService {
       (acc, graph) => {
         const timePoint = {
           x: new Date(graph.resultTime).getTime(),
-          y: graph.availDur,
+          y: this.calculateAvailability(graph.availDur),
         };
 
         // Find the existing entry for this cellId
